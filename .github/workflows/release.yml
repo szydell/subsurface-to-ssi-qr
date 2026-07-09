@@ -67,7 +67,7 @@ jobs:
         run: make build-release-artifacts VERSION=${GITHUB_REF_NAME}
 
       - name: Upload release artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-${{ runner.os }}-${{ runner.arch }}
           path: |
@@ -82,7 +82,7 @@ jobs:
 
     steps:
       - name: Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: release-*
           path: dist
