@@ -9,9 +9,17 @@ permissions:
   contents: write
 
 jobs:
-  release:
-    name: Build and publish release
-    runs-on: ubuntu-latest
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    defaults:
+      run:
+        shell: bash
 
     steps:
       - name: Checkout repository
@@ -30,6 +38,7 @@ jobs:
           fi
 
       - name: Install Linux GUI build dependencies
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -43,30 +52,50 @@ jobs:
             libxxf86vm-dev \
             libgl1-mesa-dev
 
+      - name: Install make on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: choco install make -y
+
       - name: Doctor checks
         run: make doctor
 
       - name: Run tests
         run: make test
 
-      - name: Build CLI
-        run: make build-cli VERSION=${GITHUB_REF_NAME}
+      - name: Build release artifacts
+        run: make build-release-artifacts VERSION=${GITHUB_REF_NAME}
 
-      - name: Build GUI
-        run: make build-gui VERSION=${GITHUB_REF_NAME}
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ runner.os }}-${{ runner.arch }}
+          path: |
+            dist/subsurface-ssi-cli-*
+            dist/subsurface-ssi-gui-*
+          if-no-files-found: error
 
-      - name: Prepare release artifacts
-        run: |
-          mkdir -p dist
-          cp subsurface-to-ssi-qr/bin/subsurface-ssi-cli dist/subsurface-ssi-cli-linux-amd64
-          cp subsurface-to-ssi-qr/bin/subsurface-ssi-gui dist/subsurface-ssi-gui-linux-amd64
-          sha256sum dist/* > dist/SHA256SUMS.txt
+  release:
+    name: Publish release
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+
+      - name: Generate checksums
+        run: sha256sum dist/* > dist/SHA256SUMS.txt
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v3
         with:
           files: |
-            dist/subsurface-ssi-cli-linux-amd64
-            dist/subsurface-ssi-gui-linux-amd64
+            dist/subsurface-ssi-cli-*
+            dist/subsurface-ssi-gui-*
             dist/SHA256SUMS.txt
           generate_release_notes: true

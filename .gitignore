@@ -216,3 +216,5 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+subsurface-to-ssi-qr/bin/subsurface-ssi-gui
+subsurface-to-ssi-qr/bin/subsurface-ssi-cli
