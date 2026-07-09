@@ -8,6 +8,8 @@
 %global forgeurl https://github.com/szydell/subsurface-to-ssi-qr
 # Upstream release tags use format: vX.Y.Z
 %global tag v%{version}
+# Keep source archive filename in Name-Version form for COPR/SCM SRPM generation.
+%global archivename %{name}-%{version}
 %forgemeta
 
 Name:           subsurface-to-ssi-qr
