@@ -19,8 +19,8 @@ other = "Tauchgaenge"
 [label_payload]
 other = "SSI-Payload"
 
-[label_preview_qr]
-other = "QR-Vorschau"
+[label_ssi_qr]
+other = "SSI-Divelog QR-Code"
 
 [label_language]
 other = "Sprache:"

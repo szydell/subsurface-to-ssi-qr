@@ -19,8 +19,8 @@ other = "Nurkowania"
 [label_payload]
 other = "Payload SSI"
 
-[label_preview_qr]
-other = "Podglad QR"
+[label_ssi_qr]
+other = "Kod QR SSI Divelog"
 
 [label_language]
 other = "Jezyk:"

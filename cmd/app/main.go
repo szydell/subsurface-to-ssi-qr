@@ -228,7 +228,7 @@ func main() {
 	listHeader.Wrapping = fyne.TextWrapOff
 	divesLabel := widget.NewLabel(tr.text("label_dives"))
 	payloadLabel := widget.NewLabel(tr.text("label_payload"))
-	previewLabel := widget.NewLabel(tr.text("label_preview_qr"))
+	qrLabel := widget.NewLabel(tr.text("label_ssi_qr"))
 	langLabel := widget.NewLabel(tr.text("label_language"))
 	var toolbar *fyne.Container
 	var content *fyne.Container
@@ -244,7 +244,7 @@ func main() {
 		saveBtn.SetText(tr.text("btn_save_png"))
 		divesLabel.SetText(tr.text("label_dives"))
 		payloadLabel.SetText(tr.text("label_payload"))
-		previewLabel.SetText(tr.text("label_preview_qr"))
+		qrLabel.SetText(tr.text("label_ssi_qr"))
 		langLabel.SetText(tr.text("label_language"))
 		payloadBox.SetPlaceHolder(tr.text("payload_placeholder"))
 		listHeader.SetText(tr.text("list_header"))
@@ -275,7 +275,7 @@ func main() {
 		nil,
 		diveList,
 	)
-	right := container.NewVBox(previewLabel, img)
+	right := container.NewVBox(qrLabel, img)
 
 	mainSplit := container.NewHSplit(left, right)
 	mainSplit.Offset = 0.55
