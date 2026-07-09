@@ -57,12 +57,33 @@ func (t *translator) text(id string) string {
 }
 
 func (t *translator) textData(id string, data map[string]any) string {
-	msg, err := t.localizer.Localize(&i18n.LocalizeConfig{
+	return t.localize(&i18n.LocalizeConfig{
 		MessageID:    id,
 		TemplateData: data,
 	})
+}
+
+func (t *translator) textCount(id string, count int, data map[string]any) string {
+	if data == nil {
+		data = make(map[string]any, 1)
+	}
+	data["PluralCount"] = count
+
+	return t.localize(&i18n.LocalizeConfig{
+		MessageID:    id,
+		TemplateData: data,
+		PluralCount:  count,
+	})
+}
+
+func (t *translator) localize(cfg *i18n.LocalizeConfig) string {
+	msg, err := t.localizer.Localize(&i18n.LocalizeConfig{
+		MessageID:    cfg.MessageID,
+		TemplateData: cfg.TemplateData,
+		PluralCount:  cfg.PluralCount,
+	})
 	if err != nil {
-		return id
+		return cfg.MessageID
 	}
 	return msg
 }

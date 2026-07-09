@@ -44,7 +44,8 @@ other = "Parser-Fehler: {{.Err}}"
 other = "Keine gueltigen Tauchgaenge in der Datei gefunden"
 
 [status_loaded_n_dives]
-other = "{{.Count}} Tauchgaenge aus {{.File}} geladen"
+one = "{{.PluralCount}} Tauchgang aus {{.File}} geladen"
+other = "{{.PluralCount}} Tauchgaenge aus {{.File}} geladen"
 
 [status_payload_first]
 other = "Bitte zuerst Payload erzeugen"

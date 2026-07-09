@@ -49,6 +49,7 @@ func main() {
 	cfg := config.DefaultMapping()
 	listItems := make([]diveListItem, 0)
 	selectedDiveID := -1
+	loadedFileName := ""
 
 	startDir := ""
 	if wd, wdErr := os.Getwd(); wdErr == nil {
@@ -75,6 +76,12 @@ func main() {
 	img := canvas.NewImageFromImage(nil)
 	img.FillMode = canvas.ImageFillContain
 	img.SetMinSize(fyne.NewSize(360, 360))
+
+	statusLoadedText := func() string {
+		return tr.textCount("status_loaded_n_dives", len(listItems), map[string]any{
+			"File": loadedFileName,
+		})
+	}
 
 	diveList := widget.NewList(
 		func() int {
@@ -147,6 +154,7 @@ func main() {
 			return
 		}
 
+		loadedFileName = ""
 		listItems = listItems[:0]
 		for i, d := range parsed {
 			mapped := ssi.MapDive(d, cfg)
@@ -178,10 +186,8 @@ func main() {
 
 		diveList.Refresh()
 		diveList.Select(0)
-		status.SetText(tr.textData("status_loaded_n_dives", map[string]any{
-			"Count": len(listItems),
-			"File":  filepath.Base(path),
-		}))
+		loadedFileName = filepath.Base(path)
+		status.SetText(statusLoadedText())
 	})
 
 	saveBtn := widget.NewButton(tr.text("btn_save_png"), func() {
@@ -242,7 +248,9 @@ func main() {
 		langLabel.SetText(tr.text("label_language"))
 		payloadBox.SetPlaceHolder(tr.text("payload_placeholder"))
 		listHeader.SetText(tr.text("list_header"))
-		if len(listItems) == 0 {
+		if loadedFileName != "" {
+			status.SetText(statusLoadedText())
+		} else if len(listItems) == 0 {
 			status.SetText(tr.text("status_prompt_load"))
 		}
 

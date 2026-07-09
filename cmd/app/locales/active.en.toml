@@ -44,7 +44,8 @@ other = "Parse error: {{.Err}}"
 other = "No valid dives found in file"
 
 [status_loaded_n_dives]
-other = "Loaded {{.Count}} dives from {{.File}}"
+one = "Loaded {{.PluralCount}} dive from {{.File}}"
+other = "Loaded {{.PluralCount}} dives from {{.File}}"
 
 [status_payload_first]
 other = "Generate payload first"

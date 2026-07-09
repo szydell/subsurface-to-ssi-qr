@@ -44,7 +44,10 @@ other = "Blad parsera: {{.Err}}"
 other = "Nie znaleziono poprawnych nurkowan w pliku"
 
 [status_loaded_n_dives]
-other = "Wczytano {{.Count}} nurkowan z {{.File}}"
+one = "Wczytano nurkowanie z {{.File}}"
+few = "Wczytano {{.PluralCount}} nurkowania z {{.File}}"
+many = "Wczytano {{.PluralCount}} nurkowan z {{.File}}"
+other = "Wczytano {{.PluralCount}} nurkowan z {{.File}}"
 
 [status_payload_first]
 other = "Najpierw wygeneruj payload"
