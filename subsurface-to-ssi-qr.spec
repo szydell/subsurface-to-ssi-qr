@@ -77,6 +77,7 @@ go test ./...
 %install
 install -Dpm0755 bin/subsurface-ssi-cli %{buildroot}%{_bindir}/subsurface-ssi-cli
 install -Dpm0755 bin/subsurface-ssi-gui %{buildroot}%{_bindir}/subsurface-ssi-gui
+install -Dpm0644 assets/icon.png %{buildroot}%{_datadir}/pixmaps/subsurface-to-ssi-qr.png
 
 # Install desktop entry for the GUI app.
 install -d %{buildroot}%{_datadir}/applications
@@ -86,7 +87,7 @@ Type=Application
 Name=Subsurface to SSI QR
 Comment=Convert Subsurface dive logs to SSI-compatible QR payloads
 Exec=subsurface-ssi-gui
-Icon=applications-graphics
+Icon=subsurface-to-ssi-qr
 Terminal=false
 Categories=Utility;Education;
 Keywords=diving;subsurface;ssi;qr;
@@ -108,6 +109,7 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/%{name}-gui.desktop
 %files gui
 %{_bindir}/subsurface-ssi-gui
 %{_datadir}/applications/%{name}-gui.desktop
+%{_datadir}/pixmaps/subsurface-to-ssi-qr.png
 
 %changelog
 %autochangelog

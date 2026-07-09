@@ -37,6 +37,9 @@ const prefLang = "ui_lang"
 
 func main() {
 	a := app.NewWithID("pl.szydell.subsurface-to-ssi-qr")
+	if appIcon := loadAppIcon(); appIcon != nil {
+		a.SetIcon(appIcon)
+	}
 	uiLang := normalizeLang(a.Preferences().String(prefLang))
 	tr, err := newTranslator(uiLang)
 	if err != nil {
@@ -312,4 +315,20 @@ func formatDiveRow(item diveListItem) string {
 		item.DepthText,
 		item.SiteText,
 	)
+}
+
+func loadAppIcon() fyne.Resource {
+	iconCandidates := []string{
+		"/usr/share/pixmaps/subsurface-to-ssi-qr.png",
+		"assets/icon.png",
+	}
+
+	for _, p := range iconCandidates {
+		data, err := os.ReadFile(p)
+		if err == nil && len(data) > 0 {
+			return fyne.NewStaticResource(filepath.Base(p), data)
+		}
+	}
+
+	return nil
 }
