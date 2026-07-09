@@ -1,0 +1,59 @@
+[app_title]
+other = "Subsurface do SSI QR"
+
+[status_prompt_load]
+other = "Wczytaj plik Subsurface (.xml/.ssrf)"
+
+[payload_placeholder]
+other = "Payload SSI pojawi sie tutaj"
+
+[btn_open_ssrf]
+other = "Otworz SSRF"
+
+[btn_save_png]
+other = "Zapisz QR jako PNG"
+
+[label_dives]
+other = "Nurkowania"
+
+[label_payload]
+other = "Payload SSI"
+
+[label_preview_qr]
+other = "Podglad QR"
+
+[label_language]
+other = "Jezyk:"
+
+[list_header]
+other = "Lp  Data              Czas       Głęb.    Miejsce"
+
+[filter_subsurface]
+other = "Logi Subsurface"
+
+[filter_png]
+other = "Obraz PNG"
+
+[status_file_select_error]
+other = "Blad wyboru pliku: {{.Err}}"
+
+[status_parse_error]
+other = "Blad parsera: {{.Err}}"
+
+[status_no_valid_dives]
+other = "Nie znaleziono poprawnych nurkowan w pliku"
+
+[status_loaded_n_dives]
+other = "Wczytano {{.Count}} nurkowan z {{.File}}"
+
+[status_payload_first]
+other = "Najpierw wygeneruj payload"
+
+[status_png_save_error]
+other = "Nie udalo sie zapisac PNG: {{.Err}}"
+
+[status_png_saved]
+other = "Zapisano QR PNG"
+
+[status_qr_gen_error]
+other = "Blad generowania QR: {{.Err}}"

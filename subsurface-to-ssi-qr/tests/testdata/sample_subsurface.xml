@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<divelog>
+  <dives>
+    <dive number='1' date='2025-09-20' time='16:23:00' duration='48:30 min' maxdepth='26.4 m' dive_mode='scuba' watertype='salt'>
+      <location>Blue Wall</location>
+      <airtemp>28 C</airtemp>
+      <watertemp>22 C</watertemp>
+      <visibility>12 m</visibility>
+    </dive>
+    <dive number='2' date='2025-09-21' time='08:12:00' duration='39:00 min' maxdepth='18.2 m' dive_mode='freedive' watertype='fresh'>
+      <location>Lagoon</location>
+      <watertemp>20 C</watertemp>
+      <visibility>8 m</visibility>
+    </dive>
+  </dives>
+</divelog>

@@ -1,0 +1,59 @@
+[app_title]
+other = "Subsurface to SSI QR"
+
+[status_prompt_load]
+other = "Open a Subsurface file (.xml/.ssrf)"
+
+[payload_placeholder]
+other = "SSI payload will appear here"
+
+[btn_open_ssrf]
+other = "Open SSRF"
+
+[btn_save_png]
+other = "Save QR as PNG"
+
+[label_dives]
+other = "Dives"
+
+[label_payload]
+other = "SSI Payload"
+
+[label_preview_qr]
+other = "QR Preview"
+
+[label_language]
+other = "Language:"
+
+[list_header]
+other = "No  Date              Time       Depth    Location"
+
+[filter_subsurface]
+other = "Subsurface logs"
+
+[filter_png]
+other = "PNG image"
+
+[status_file_select_error]
+other = "File selection error: {{.Err}}"
+
+[status_parse_error]
+other = "Parse error: {{.Err}}"
+
+[status_no_valid_dives]
+other = "No valid dives found in file"
+
+[status_loaded_n_dives]
+other = "Loaded {{.Count}} dives from {{.File}}"
+
+[status_payload_first]
+other = "Generate payload first"
+
+[status_png_save_error]
+other = "Failed to save PNG: {{.Err}}"
+
+[status_png_saved]
+other = "Saved QR PNG"
+
+[status_qr_gen_error]
+other = "QR generation error: {{.Err}}"

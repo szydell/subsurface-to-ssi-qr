@@ -1,0 +1,13 @@
+site_id: 0
+var_weather_id: 2
+var_entry_id: 21
+var_water_body_id: 15
+var_watertype_id: 5
+var_current_id: 6
+var_surface_id: 10
+var_divetype_id: 24
+user_master_id: 0
+user_firstname: ""
+user_lastname: ""
+user_leader_id: 0
+include_user_ids: false

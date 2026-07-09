@@ -1,0 +1,59 @@
+[app_title]
+other = "Subsurface zu SSI QR"
+
+[status_prompt_load]
+other = "Subsurface-Datei laden (.xml/.ssrf)"
+
+[payload_placeholder]
+other = "SSI-Payload wird hier angezeigt"
+
+[btn_open_ssrf]
+other = "SSRF oeffnen"
+
+[btn_save_png]
+other = "QR als PNG speichern"
+
+[label_dives]
+other = "Tauchgaenge"
+
+[label_payload]
+other = "SSI-Payload"
+
+[label_preview_qr]
+other = "QR-Vorschau"
+
+[label_language]
+other = "Sprache:"
+
+[list_header]
+other = "Nr  Datum             Zeit       Tiefe    Ort"
+
+[filter_subsurface]
+other = "Subsurface-Logs"
+
+[filter_png]
+other = "PNG-Bild"
+
+[status_file_select_error]
+other = "Fehler bei Dateiauswahl: {{.Err}}"
+
+[status_parse_error]
+other = "Parser-Fehler: {{.Err}}"
+
+[status_no_valid_dives]
+other = "Keine gueltigen Tauchgaenge in der Datei gefunden"
+
+[status_loaded_n_dives]
+other = "{{.Count}} Tauchgaenge aus {{.File}} geladen"
+
+[status_payload_first]
+other = "Bitte zuerst Payload erzeugen"
+
+[status_png_save_error]
+other = "PNG konnte nicht gespeichert werden: {{.Err}}"
+
+[status_png_saved]
+other = "QR-PNG gespeichert"
+
+[status_qr_gen_error]
+other = "Fehler bei QR-Erzeugung: {{.Err}}"

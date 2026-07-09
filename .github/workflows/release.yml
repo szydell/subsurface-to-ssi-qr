@@ -1,0 +1,71 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: subsurface-to-ssi-qr/go.mod
+
+      - name: Validate tag format (vX.Y.Z)
+        run: |
+          if ! [[ "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Tag '${GITHUB_REF_NAME}' does not match required format: v<major>.<minor>.<patch>"
+            exit 1
+          fi
+
+      - name: Install Linux GUI build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            pkg-config \
+            libx11-dev \
+            libxrandr-dev \
+            libxi-dev \
+            libxcursor-dev \
+            libxinerama-dev \
+            libxxf86vm-dev \
+            libgl1-mesa-dev
+
+      - name: Doctor checks
+        run: make doctor
+
+      - name: Run tests
+        run: make test
+
+      - name: Build CLI
+        run: make build-cli VERSION=${GITHUB_REF_NAME}
+
+      - name: Build GUI
+        run: make build-gui VERSION=${GITHUB_REF_NAME}
+
+      - name: Prepare release artifacts
+        run: |
+          mkdir -p dist
+          cp subsurface-to-ssi-qr/bin/subsurface-ssi-cli dist/subsurface-ssi-cli-linux-amd64
+          cp subsurface-to-ssi-qr/bin/subsurface-ssi-gui dist/subsurface-ssi-gui-linux-amd64
+          sha256sum dist/* > dist/SHA256SUMS.txt
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/subsurface-ssi-cli-linux-amd64
+            dist/subsurface-ssi-gui-linux-amd64
+            dist/SHA256SUMS.txt
+          generate_release_notes: true
