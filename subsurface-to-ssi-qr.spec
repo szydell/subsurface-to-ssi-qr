@@ -37,7 +37,7 @@ BuildRequires:  libXinerama-devel
 BuildRequires:  libXxf86vm-devel
 
 %description
-Standalone tool that converts Subsurface dive logs (.xml/.ssrf) to
+Standalone tool that converts Subsurface dive logs (.ssrf) to
 SSI-compatible QR payloads and QR images.
 
 The base package ships the pure Go CLI utility. The GUI desktop application is
