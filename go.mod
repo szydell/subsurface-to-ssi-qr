@@ -1,4 +1,4 @@
-module subsurface-to-ssi-qr
+module github.com/szydell/subsurface-to-ssi-qr
 
 go 1.26
 

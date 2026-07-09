@@ -1,8 +1,8 @@
 GO ?= go
-PROJECT_DIR ?= subsurface-to-ssi-qr
+PROJECT_DIR ?= .
 BIN_DIR ?= $(PROJECT_DIR)/bin
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
-LDFLAGS ?= -X subsurface-to-ssi-qr/internal/buildinfo.Version=$(VERSION)
+LDFLAGS ?= -X github.com/szydell/subsurface-to-ssi-qr/internal/buildinfo.Version=$(VERSION)
 JOBS ?= $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
 GO_PARALLEL_FLAGS ?= -p $(JOBS)
 

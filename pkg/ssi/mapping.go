@@ -1,47 +1,9 @@
 package ssi
 
-import (
-	"strings"
+import "strings"
 
-	"subsurface-to-ssi-qr/internal/config"
-	"subsurface-to-ssi-qr/internal/model"
-)
-
-const (
-	DiveTypeScuba                   = 0
-	DiveTypeExtendedRange           = 2
-	DiveTypeRebreatherSelfContained = 4
-	DiveTypeFreediving              = 6
-	DiveTypeRebreatherClosedCircuit = 8
-)
-
-// Payload is a typed representation of SSI QR fields.
-type Payload struct {
-	DiveType      int
-	DiveTimeMin   float64
-	DateTime      string
-	DepthM        float64
-	SiteID        int
-	VarWeatherID  int
-	VarEntryID    int
-	VarWaterBody  int
-	VarWaterType  int
-	VarCurrentID  int
-	VarSurfaceID  int
-	VarDiveTypeID int
-
-	UserMasterID  int
-	UserFirstName string
-	UserLastName  string
-	UserLeaderID  int
-
-	AirTempC   *float64
-	WaterTempC *float64
-	Visibility *float64
-}
-
-// MapDive converts a normalized Subsurface dive into SSI payload values.
-func MapDive(in model.DiveRecord, cfg config.MappingConfig) Payload {
+// MapDive converts a normalized dive into SSI payload values.
+func MapDive(in DiveInput, cfg MappingConfig) Payload {
 	waterTypeID := cfg.WaterTypeID
 	rawWater := strings.ToLower(strings.TrimSpace(in.WaterTypeRaw))
 	if strings.Contains(rawWater, "fresh") {
@@ -71,6 +33,12 @@ func MapDive(in model.DiveRecord, cfg config.MappingConfig) Payload {
 		WaterTempC:    in.WaterTempC,
 		Visibility:    in.VisibilityM,
 	}
+}
+
+// BuildPayloadFromDive maps and serializes a dive in one call.
+func BuildPayloadFromDive(in DiveInput, cfg MappingConfig, mode ValidationMode) (string, error) {
+	mapped := MapDive(in, cfg)
+	return BuildPayload(mapped, cfg.IncludeUserIDs, mode)
 }
 
 func mapDiveType(mode string) int {

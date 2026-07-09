@@ -30,7 +30,7 @@ go test ./...
 
 ## Localization
 
-- GUI uses `go-i18n` with TOML files in `subsurface-to-ssi-qr/cmd/app/locales/`.
+- GUI uses `go-i18n` with TOML files in `cmd/app/locales/`.
 - To add a language, copy `active.en.toml` to `active.<lang>.toml` and translate message values.
 - Keep message IDs unchanged; only translate `other = "..."` values.
 - Keep all locale files in sync (`active.en.toml`, `active.pl.toml`, `active.de.toml`).

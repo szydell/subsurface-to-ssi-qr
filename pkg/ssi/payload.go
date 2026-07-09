@@ -6,14 +6,6 @@ import (
 	"strings"
 )
 
-// ValidationMode controls how strict required-field checks are.
-type ValidationMode string
-
-const (
-	ValidationLenient ValidationMode = "lenient"
-	ValidationStrict  ValidationMode = "strict"
-)
-
 // BuildPayload converts payload struct into SSI QR text format.
 func BuildPayload(p Payload, includeUser bool, mode ValidationMode) (string, error) {
 	if mode == ValidationStrict {

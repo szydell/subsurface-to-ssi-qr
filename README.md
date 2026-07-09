@@ -5,9 +5,7 @@ SSI-compatible QR payloads and QR images.
 
 ## Status
 
-Initial implementation (MVP) is available under:
-
-- `subsurface-to-ssi-qr/`
+Initial implementation (MVP) is available in this repository root module.
 
 Implemented in MVP:
 
@@ -74,9 +72,48 @@ Linux also `pkg-config` + GUI compatibility libraries required by Fyne.
 
 Default mapping profile is in:
 
-- `subsurface-to-ssi-qr/internal/config/defaults.yaml`
+- `internal/config/defaults.yaml`
 
 This includes current reverse-engineered defaults for `var_*` fields.
+
+## Reusable Go Module (SSI Payload)
+
+SSI payload model and serializer are now available as a public package:
+
+- `github.com/szydell/subsurface-to-ssi-qr/pkg/ssi`
+
+This package does not depend on project `internal/*` packages, so it can be
+used by external tools that parse any dive source (not only Subsurface).
+
+Example:
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+
+	"github.com/szydell/subsurface-to-ssi-qr/pkg/ssi"
+)
+
+func main() {
+	cfg := ssi.DefaultMappingConfig()
+	dive := ssi.DiveInput{
+		StartTime:   time.Now().UTC(),
+		DurationMin: 42.0,
+		MaxDepthM:   21.3,
+		DiveMode:    "scuba",
+	}
+
+	payload, err := ssi.BuildPayloadFromDive(dive, cfg, ssi.ValidationStrict)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(payload)
+}
+```
 
 ## Documentation
 
@@ -89,9 +126,9 @@ This includes current reverse-engineered defaults for `var_*` fields.
 
 GUI translations use `go-i18n` with TOML message files (standard i18n approach):
 
-- `subsurface-to-ssi-qr/cmd/app/locales/active.en.toml`
-- `subsurface-to-ssi-qr/cmd/app/locales/active.pl.toml`
-- `subsurface-to-ssi-qr/cmd/app/locales/active.de.toml`
+- `cmd/app/locales/active.en.toml`
+- `cmd/app/locales/active.pl.toml`
+- `cmd/app/locales/active.de.toml`
 
 Language is selectable in GUI (`EN` / `PL` / `DE`) and remembered across runs.
 Default on first run is `EN`.

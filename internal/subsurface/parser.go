@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"subsurface-to-ssi-qr/internal/model"
+	"github.com/szydell/subsurface-to-ssi-qr/internal/model"
 )
 
 // ParseFile reads a Subsurface XML file and returns normalized dives.

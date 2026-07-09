@@ -1,4 +1,4 @@
-# Internal API
+# API
 
 ## Overview
 
@@ -7,7 +7,8 @@ The app is structured into independent modules:
 - `internal/subsurface`: Parse Subsurface XML into normalized records
 - `internal/model`: Shared domain model (`DiveRecord`)
 - `internal/config`: Mapping defaults and config loading
-- `internal/ssi`: Map records to SSI payload and serialize QR text
+- `pkg/ssi`: Public SSI payload model, mapping and serialization module
+- `internal/ssi`: Backward-compatible adapter for app internals
 - `internal/qr`: QR PNG generation
 - `cmd/app`: Desktop GUI
 
@@ -20,6 +21,18 @@ The app is structured into independent modules:
 5. QR module renders PNG bytes.
 6. GUI shows text payload and QR preview.
 
+## Public Module For External Integrators
+
+Import path:
+
+- `github.com/szydell/subsurface-to-ssi-qr/pkg/ssi`
+
+Purpose:
+
+- build SSI payload from your own parser/input model,
+- use neutral `ssi.DiveInput` (no dependency on this repository internals),
+- map to `ssi.Payload` and serialize to SSI QR string.
+
 ## Key Functions
 
 ### Subsurface Parser
@@ -29,7 +42,8 @@ The app is structured into independent modules:
 
 ### Mapping And Serialization
 
-- `MapDive(in model.DiveRecord, cfg config.MappingConfig) ssi.Payload`
+- `MapDive(in ssi.DiveInput, cfg ssi.MappingConfig) ssi.Payload`
+- `BuildPayloadFromDive(in ssi.DiveInput, cfg ssi.MappingConfig, mode ssi.ValidationMode) (string, error)`
 - `BuildPayload(p ssi.Payload, includeUser bool, mode ValidationMode) (string, error)`
 - `ValidateRequired(p ssi.Payload) error`
 

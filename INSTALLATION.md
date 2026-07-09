@@ -10,7 +10,7 @@
 
 Implementation lives in:
 
-- `subsurface-to-ssi-qr/`
+- repository root (`.`)
 
 ## Build And Run
 
@@ -63,7 +63,7 @@ How it works:
 - Use the language selector in the top toolbar (`EN` / `PL` / `DE`).
 - The selected language is remembered across app restarts.
 - Translation catalogs are loaded from standard `go-i18n` TOML files in:
-	`subsurface-to-ssi-qr/cmd/app/locales/`
+	`cmd/app/locales/`
 
 ## Environment Check (`make doctor`)
 
@@ -135,7 +135,7 @@ go build -o .\bin\subsurface-ssi-gui.exe .\cmd\app
 
 Edit:
 
-- `subsurface-to-ssi-qr/internal/config/defaults.yaml`
+- `internal/config/defaults.yaml`
 
 Current app build uses built-in defaults and does not yet expose config file
 selection in GUI. This is planned for next iteration.

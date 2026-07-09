@@ -7,11 +7,11 @@ import (
 	"path/filepath"
 	"strings"
 
-	"subsurface-to-ssi-qr/internal/buildinfo"
-	"subsurface-to-ssi-qr/internal/config"
-	"subsurface-to-ssi-qr/internal/qr"
-	"subsurface-to-ssi-qr/internal/ssi"
-	"subsurface-to-ssi-qr/internal/subsurface"
+	"github.com/szydell/subsurface-to-ssi-qr/internal/buildinfo"
+	"github.com/szydell/subsurface-to-ssi-qr/internal/config"
+	"github.com/szydell/subsurface-to-ssi-qr/internal/qr"
+	"github.com/szydell/subsurface-to-ssi-qr/internal/ssi"
+	"github.com/szydell/subsurface-to-ssi-qr/internal/subsurface"
 )
 
 func main() {
