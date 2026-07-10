@@ -18,6 +18,19 @@ Implemented in MVP:
 - Pure Go CLI mode (no GUI dependencies)
 - Unit tests for parser and payload generation
 
+## Fedora Users
+
+A dedicated Copr repository with prebuilt RPM packages is available:
+
+- https://copr.fedorainfracloud.org/coprs/szydell/subsurface-to-ssi-qr/
+
+This is the recommended installation method on Fedora:
+
+```bash
+sudo dnf copr enable szydell/subsurface-to-ssi-qr
+sudo dnf install subsurface-to-ssi-qr
+```
+
 ## Quick Start
 
 1. Enter project directory:
