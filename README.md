@@ -1,3 +1,4 @@
+[![Copr build status](https://copr.fedorainfracloud.org/coprs/szydell/subsurface-to-ssi-qr/package/subsurface-to-ssi-qr/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/szydell/subsurface-to-ssi-qr/package/subsurface-to-ssi-qr/)
 # subsurface-to-ssi-qr
 
 Standalone desktop tool that converts Subsurface dive logs (`.xml` / `.ssrf`) to
