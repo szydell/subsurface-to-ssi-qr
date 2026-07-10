@@ -13,6 +13,13 @@
 # Keep the source archive basename in Name-Version form (no 'v' prefix),
 # matching the directory name inside the GitHub tag tarball.
 %global archivename %{name}-%{base_version}
+# %%forgemeta must see %%{version} already matching %%{tag} (minus the 'v'
+# prefix) to recognize this as a proper tagged release. Since it runs before
+# the Version: tag below is parsed, %%{version} would otherwise still be
+# empty, forgemeta would treat %%{tag} as an unmatched snapshot ref, and it
+# would stuff a redundant ".<date>git<tag>" into %%dist (e.g. producing
+# 1.1.2-1.20260710gitv1.1.2.fc44 instead of the expected 1.1.2-1.fc44).
+%global version %{base_version}
 # %%forgemeta (from go-rpm-macros/rpmautospec forge macros) computes Source0
 # (%%{forgesource}) using RPM's built-in Lua only - no external shell tools
 # involved - so it stays valid no matter which COPR build stage/chroot
