@@ -9,15 +9,17 @@ permissions:
   contents: write
 
 jobs:
-  bump-spec:
-    name: Bump RPM spec version
+  copr-build:
+    name: Build SRPM and submit to COPR
     runs-on: ubuntu-latest
+    container: fedora:42
 
     steps:
+      - name: Install SRPM build prerequisites
+        run: dnf install -y git rpm-build copr-cli
+
       - name: Checkout repository
         uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
 
       - name: Validate tag format (vX.Y.Z)
         run: |
@@ -32,23 +34,35 @@ jobs:
           sed -i -E "s/^(%global base_version )[0-9]+\.[0-9]+\.[0-9]+$/\1${release_version}/" subsurface-to-ssi-qr.spec
           grep -n '^%global base_version ' subsurface-to-ssi-qr.spec
 
-      - name: Commit spec version bump
+      - name: Build SRPM
         run: |
-          if git diff --quiet -- subsurface-to-ssi-qr.spec; then
-            echo "Spec version already matches tag; nothing to commit."
-            exit 0
-          fi
+          mkdir -p rpmbuild/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+          rpmbuild -bs --define "_topdir ${GITHUB_WORKSPACE}/rpmbuild" subsurface-to-ssi-qr.spec
+          srpm_path="$(ls "${GITHUB_WORKSPACE}"/rpmbuild/SRPMS/*.src.rpm)"
+          echo "SRPM_PATH=${srpm_path}" >> "$GITHUB_ENV"
 
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add subsurface-to-ssi-qr.spec
-          git commit -m "chore(rpm): bump spec to ${GITHUB_REF_NAME} [skip ci]"
-          git push origin HEAD:main
+      - name: Configure copr-cli credentials
+        env:
+          COPR_LOGIN: ${{ secrets.COPR_LOGIN }}
+          COPR_USERNAME: ${{ secrets.COPR_USERNAME }}
+          COPR_TOKEN: ${{ secrets.COPR_TOKEN }}
+        run: |
+          mkdir -p "$HOME/.config"
+          cat > "$HOME/.config/copr" <<EOF
+          [copr-cli]
+          login = $COPR_LOGIN
+          username = $COPR_USERNAME
+          token = $COPR_TOKEN
+          copr_url = https://copr.fedorainfracloud.org
+          EOF
+          chmod 600 "$HOME/.config/copr"
+
+      - name: Submit build to COPR
+        run: copr-cli build szydell/subsurface-to-ssi-qr "${SRPM_PATH}"
 
   build:
     name: Build (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    needs: bump-spec
     strategy:
       fail-fast: false
       matrix:
