@@ -6,24 +6,18 @@
 # - GUI app (Fyne + cgo) as a subpackage
 
 %global forgeurl https://github.com/szydell/subsurface-to-ssi-qr
-# Default release version. For webhook/COPR automation you can override with:
-#   --define 'upstream_version 1.0.6' [--define 'upstream_tag v1.0.6']
-%global base_version 1.0.5
-%global upstream_version %{?upstream_version:%{upstream_version}}%{!?upstream_version:%{base_version}}
-# Upstream release tags use format: vX.Y.Z (override with upstream_tag if needed).
-%global tag %{?upstream_tag:%{upstream_tag}}%{!?upstream_tag:v%{upstream_version}}
-# In COPR make-srpm-method, SOURCES may not contain Source0 yet.
-# Allow rpmbuild -bs to fetch Source0 from URL.
-%undefine _disable_source_fetch
+# Release version is kept in sync by the release workflow.
+%global base_version 1.0.6
 
 Name:           subsurface-to-ssi-qr
-Version:        %{upstream_version}
+Version:        %{base_version}
 Release:        %autorelease
 Summary:        Convert Subsurface dive logs to SSI-compatible QR payloads and QR images
 
 License:        Apache-2.0
 URL:            %{forgeurl}
-Source0:        %{forgeurl}/archive/refs/tags/%{tag}.tar.gz
+# COPR/rpkg builds source from the git checkout and stores it under this name.
+Source0:        %(OUTDIR=%{_sourcedir}; source /usr/lib/rpkg.macros.d/git.bash; git_cwd_archive source_name=%{name}-%{version}.tar.gz)
 
 BuildRequires:  go-rpm-macros
 BuildRequires:  golang >= 1.26
@@ -70,7 +64,7 @@ This subpackage contains the Fyne-based graphical frontend.
 
 %build
 # Ensure version string embedded in binaries matches upstream git tag format.
-export VERSION=%{tag}
+export VERSION=v%{version}
 # GUI requires cgo; CLI target in Makefile still forces CGO_ENABLED=0 internally.
 export CGO_ENABLED=1
 %make_build build-cli build-gui VERSION=${VERSION}
