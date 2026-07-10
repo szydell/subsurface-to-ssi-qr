@@ -8,6 +8,13 @@
 %global forgeurl https://github.com/szydell/subsurface-to-ssi-qr
 # Release version is kept in sync by the release workflow.
 %global base_version 1.0.7
+# Upstream release tags use format: vX.Y.Z.
+%global tag v%{base_version}
+# Some COPR build chroots don't have rpkg macros installed, so Source0 must
+# not depend on local tooling. Fetch the tag archive directly from GitHub
+# instead (only requires network access during rpmbuild -bs, like any other
+# Source0 URL).
+%undefine _disable_source_fetch
 
 Name:           subsurface-to-ssi-qr
 Version:        %{base_version}
@@ -16,8 +23,7 @@ Summary:        Convert Subsurface dive logs to SSI-compatible QR payloads and Q
 
 License:        Apache-2.0
 URL:            %{forgeurl}
-# COPR/rpkg builds source from the git checkout and stores it under this name.
-Source0:        %(OUTDIR=%{_sourcedir}; source /usr/lib/rpkg.macros.d/git.bash; git_cwd_archive source_name=%{name}-%{version}.tar.gz)
+Source0:        %{forgeurl}/archive/refs/tags/%{tag}.tar.gz#/%{name}-%{version}.tar.gz
 
 BuildRequires:  go-rpm-macros
 BuildRequires:  golang >= 1.26
