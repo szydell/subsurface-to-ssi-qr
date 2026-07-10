@@ -10,11 +10,17 @@
 %global base_version 1.0.8
 # Upstream release tags use format: vX.Y.Z.
 %global tag v%{base_version}
-# Some COPR build chroots don't have rpkg macros installed, so Source0 must
-# not depend on local tooling. Fetch the tag archive directly from GitHub
-# instead (only requires network access during rpmbuild -bs, like any other
-# Source0 URL).
+# Keep the source archive basename in Name-Version form (no 'v' prefix),
+# matching the directory name inside the GitHub tag tarball.
+%global archivename %{name}-%{base_version}
+# %%forgemeta (from go-rpm-macros/rpmautospec forge macros) computes Source0
+# (%%{forgesource}) using RPM's built-in Lua only - no external shell tools
+# involved - so it stays valid no matter which COPR build stage/chroot
+# re-parses this spec. COPR's own backend fetches forge-style sources before
+# invoking the sandboxed SRPM build, so no direct network access is required
+# inside that sandbox.
 %undefine _disable_source_fetch
+%forgemeta
 
 Name:           subsurface-to-ssi-qr
 Version:        %{base_version}
@@ -23,7 +29,7 @@ Summary:        Convert Subsurface dive logs to SSI-compatible QR payloads and Q
 
 License:        Apache-2.0
 URL:            %{forgeurl}
-Source0:        %{forgeurl}/archive/refs/tags/%{tag}.tar.gz#/%{name}-%{version}.tar.gz
+Source0:        %{forgesource}
 
 BuildRequires:  go-rpm-macros
 BuildRequires:  golang >= 1.26
@@ -66,7 +72,7 @@ QR payloads and QR images.
 This subpackage contains the Fyne-based graphical frontend.
 
 %prep
-%autosetup -n %{name}-%{version}
+%forgeautosetup
 
 %build
 # Ensure version string embedded in binaries matches upstream git tag format.
