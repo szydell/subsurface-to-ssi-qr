@@ -79,6 +79,12 @@ This subpackage contains the Fyne-based graphical frontend.
 export VERSION=v%{version}
 # GUI requires cgo; CLI target in Makefile still forces CGO_ENABLED=0 internally.
 export CGO_ENABLED=1
+# Fedora's build environment exports LDFLAGS with C/C++ hardening flags
+# (-Wl,... -specs=...). The Makefile's `LDFLAGS ?= -X ...` respects a
+# pre-set LDFLAGS env var, so without unsetting it those C-linker flags
+# would be passed straight to `go build -ldflags`, which Go's linker does
+# not understand ("flag provided but not defined: -Wl,-z,relro").
+unset LDFLAGS
 %make_build build-cli build-gui VERSION=${VERSION}
 
 %check
