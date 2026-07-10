@@ -7,7 +7,7 @@
 
 %global forgeurl https://github.com/szydell/subsurface-to-ssi-qr
 # Release version is kept in sync by the release workflow.
-%global base_version 1.0.6
+%global base_version 1.0.7
 
 Name:           subsurface-to-ssi-qr
 Version:        %{base_version}
