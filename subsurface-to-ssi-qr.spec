@@ -6,14 +6,18 @@
 # - GUI app (Fyne + cgo) as a subpackage
 
 %global forgeurl https://github.com/szydell/subsurface-to-ssi-qr
-# Upstream release tags use format: vX.Y.Z
-%global tag v%{version}
+# Default release version. For webhook/COPR automation you can override with:
+#   --define 'upstream_version 1.0.6' [--define 'upstream_tag v1.0.6']
+%global base_version 1.0.5
+%global upstream_version %{?upstream_version:%{upstream_version}}%{!?upstream_version:%{base_version}}
+# Upstream release tags use format: vX.Y.Z (override with upstream_tag if needed).
+%global tag %{?upstream_tag:%{upstream_tag}}%{!?upstream_tag:v%{upstream_version}}
 # In COPR make-srpm-method, SOURCES may not contain Source0 yet.
 # Allow rpmbuild -bs to fetch Source0 from URL.
 %undefine _disable_source_fetch
 
 Name:           subsurface-to-ssi-qr
-Version:        1.0.5
+Version:        %{upstream_version}
 Release:        %autorelease
 Summary:        Convert Subsurface dive logs to SSI-compatible QR payloads and QR images
 
@@ -24,6 +28,7 @@ Source0:        %{forgeurl}/archive/refs/tags/%{tag}.tar.gz
 BuildRequires:  go-rpm-macros
 BuildRequires:  golang >= 1.26
 BuildRequires:  make
+BuildRequires:  gcc
 BuildRequires:  desktop-file-utils
 BuildRequires:  pkgconfig
 
