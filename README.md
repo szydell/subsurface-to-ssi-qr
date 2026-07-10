@@ -1,20 +1,16 @@
 [![Copr build status](https://copr.fedorainfracloud.org/coprs/szydell/subsurface-to-ssi-qr/package/subsurface-to-ssi-qr/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/szydell/subsurface-to-ssi-qr/package/subsurface-to-ssi-qr/)
 # subsurface-to-ssi-qr
 
-Standalone desktop tool that converts Subsurface dive logs (`.xml` / `.ssrf`) to
+Standalone desktop tool that converts Subsurface dive logs (`.ssrf`) to
 SSI-compatible QR payloads and QR images.
 
 ## Status
 
-Initial implementation (MVP) is available in this repository root module.
-
-Implemented in MVP:
-
-- Subsurface XML parser
-- SSI field mapping with configurable defaults
+- Subsurface .ssrf parser
+- SSI field mapping
 - SSI payload generator (`dive;noid;...`)
 - QR PNG generation
-- Minimal desktop GUI to load a file, choose dive, preview payload and QR
+- Minimal desktop GUI to load a file, choose dive, view payload and QR
 - Pure Go CLI mode (no GUI dependencies)
 - Unit tests for parser and payload generation
 
