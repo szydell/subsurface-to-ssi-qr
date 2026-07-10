@@ -7,7 +7,7 @@
 
 %global forgeurl https://github.com/szydell/subsurface-to-ssi-qr
 # Release version is kept in sync by the release workflow.
-%global base_version 1.0.7
+%global base_version 1.0.8
 # Upstream release tags use format: vX.Y.Z.
 %global tag v%{base_version}
 # Some COPR build chroots don't have rpkg macros installed, so Source0 must
