@@ -9,6 +9,11 @@ GO_PARALLEL_FLAGS ?= -p $(JOBS)
 HOST_GOOS ?= $(shell $(GO) env GOOS)
 HOST_GOARCH ?= $(shell $(GO) env GOARCH)
 EXE_EXT ?= $(if $(filter windows,$(HOST_GOOS)),.exe,)
+# On Windows, GUI binaries default to the "console" subsystem, so a terminal
+# window flashes open behind/before the Fyne window. Linking with
+# -H=windowsgui builds it as a GUI subsystem executable so only the app
+# window appears (no console). Irrelevant/ignored on non-Windows linkers.
+GUI_LDFLAGS ?= $(LDFLAGS)$(if $(filter windows,$(HOST_GOOS)), -H=windowsgui,)
 
 CLI_BIN ?= $(BIN_DIR)/subsurface-ssi-cli$(EXE_EXT)
 GUI_BIN ?= $(BIN_DIR)/subsurface-ssi-gui$(EXE_EXT)
@@ -91,7 +96,7 @@ build-cli:
 
 build-gui:
 	mkdir -p $(BIN_DIR)
-	cd $(PROJECT_DIR) && GOMAXPROCS=$(JOBS) $(GO) build $(GO_PARALLEL_FLAGS) -ldflags "$(LDFLAGS)" -o ./bin/subsurface-ssi-gui$(EXE_EXT) ./cmd/app
+	cd $(PROJECT_DIR) && GOMAXPROCS=$(JOBS) $(GO) build $(GO_PARALLEL_FLAGS) -ldflags "$(GUI_LDFLAGS)" -o ./bin/subsurface-ssi-gui$(EXE_EXT) ./cmd/app
 
 build-release-artifacts:
 	mkdir -p $(DIST_DIR)
