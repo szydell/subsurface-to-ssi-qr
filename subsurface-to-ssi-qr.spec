@@ -8,18 +8,18 @@
 %global forgeurl https://github.com/szydell/subsurface-to-ssi-qr
 # Upstream release tags use format: vX.Y.Z
 %global tag v%{version}
-# Keep source archive filename in Name-Version form for COPR/SCM SRPM generation.
-%global archivename %{name}-%{version}
-%forgemeta
+# In COPR make-srpm-method, SOURCES may not contain Source0 yet.
+# Allow rpmbuild -bs to fetch Source0 from URL.
+%undefine _disable_source_fetch
 
 Name:           subsurface-to-ssi-qr
-Version:        0.1.0
+Version:        1.0.5
 Release:        %autorelease
 Summary:        Convert Subsurface dive logs to SSI-compatible QR payloads and QR images
 
 License:        Apache-2.0
 URL:            %{forgeurl}
-Source0:        %{forgesource}
+Source0:        %{forgeurl}/archive/refs/tags/%{tag}.tar.gz
 
 BuildRequires:  go-rpm-macros
 BuildRequires:  golang >= 1.26
@@ -61,7 +61,7 @@ QR payloads and QR images.
 This subpackage contains the Fyne-based graphical frontend.
 
 %prep
-%forgeautosetup
+%autosetup -n %{name}-%{version}
 
 %build
 # Ensure version string embedded in binaries matches upstream git tag format.
