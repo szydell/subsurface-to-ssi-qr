@@ -144,6 +144,34 @@ go build -o .\bin\subsurface-ssi-cli.exe .\cmd\cli
 go build -o .\bin\subsurface-ssi-gui.exe .\cmd\app
 ```
 
+### Troubleshooting: "WGL: The driver does not appear to support OpenGL"
+
+If launching the GUI on Windows fails at startup with a Fyne error like:
+
+```text
+Fyne error:  window creation error
+  Cause: APIUnavailable: WGL: The driver does not appear to support OpenGL
+  At: .../fyne/v2/internal/driver/glfw/driver.go:...
+```
+
+this is an environment/graphics-driver problem, not an app bug. Fyne's Windows
+backend (glfw) requires a real, hardware-accelerated OpenGL driver, and Windows
+is only exposing a basic/software display adapter. Common causes and fixes:
+
+- **Remote Desktop (RDP) session**: by default RDP sessions often fall back to
+  a basic display driver with no OpenGL support. Run the app on the physical
+  console/local session instead, or use a remote-access tool that preserves
+  GPU acceleration (e.g. RDP with RemoteFX/GPU passthrough enabled, or VNC).
+- **Virtual machine**: enable 3D acceleration / GPU passthrough for the VM, or
+  install a Windows software OpenGL implementation such as
+  [Mesa3D for Windows](https://github.com/pal1000/mesa-dist-win) (drop its
+  `opengl32.dll` next to `subsurface-ssi-gui.exe`) to force software rendering.
+- **Outdated/generic GPU driver**: update to the latest vendor GPU driver
+  (NVIDIA/AMD/Intel), rather than relying on the Microsoft Basic Display
+  Adapter.
+- **Windows Server / headless machine with no GPU**: use the CLI (`cmd/cli`)
+  instead, since it has no OpenGL/GUI dependency.
+
 ## Optional Config Customization
 
 Edit:
