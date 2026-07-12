@@ -20,6 +20,7 @@ import (
 	sqdialog "github.com/sqweek/dialog"
 	"golang.org/x/image/draw"
 
+	"github.com/szydell/subsurface-to-ssi-qr/internal/assets"
 	"github.com/szydell/subsurface-to-ssi-qr/internal/buildinfo"
 	"github.com/szydell/subsurface-to-ssi-qr/internal/config"
 	"github.com/szydell/subsurface-to-ssi-qr/internal/qr"
@@ -328,23 +329,30 @@ func formatDiveRow(item diveListItem) string {
 	)
 }
 
+// loadAppIcon returns the application's window/taskbar icon. It prefers the
+// system-installed pixmap (used on Linux when packaged, so desktop icon
+// theming/overrides are respected), but always falls back to the icon
+// embedded in the binary at build time (internal/assets). This guarantees
+// the icon is available on every platform regardless of the current working
+// directory or install layout, which matters most on Windows where the GUI
+// is often run as a standalone portable .exe with no "assets" directory
+// alongside it.
 func loadAppIcon() fyne.Resource {
-	iconCandidates := []string{
-		"/usr/share/pixmaps/subsurface-to-ssi-qr.png",
-		"assets/icon.png",
+	name := "subsurface-to-ssi-qr.png"
+	data := assets.IconPNG
+
+	if pixmap, err := os.ReadFile("/usr/share/pixmaps/subsurface-to-ssi-qr.png"); err == nil && len(pixmap) > 0 {
+		data = pixmap
 	}
 
-	for _, p := range iconCandidates {
-		data, err := os.ReadFile(p)
-		if err == nil && len(data) > 0 {
-			if resized, resizeErr := resizeIconPNG(data, maxAppIconSize); resizeErr == nil {
-				data = resized
-			}
-			return fyne.NewStaticResource(filepath.Base(p), data)
-		}
+	if len(data) == 0 {
+		return nil
 	}
 
-	return nil
+	if resized, resizeErr := resizeIconPNG(data, maxAppIconSize); resizeErr == nil {
+		data = resized
+	}
+	return fyne.NewStaticResource(name, data)
 }
 
 // resizeIconPNG decodes a PNG image and, if either dimension exceeds
