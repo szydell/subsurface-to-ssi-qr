@@ -50,27 +50,37 @@ func main() {
 // alongside it.
 func loadAppIcon() fyne.Resource {
 	name := "subsurface-to-ssi-qr.png"
-	data := assets.IconPNG
-
-	if pixmap, err := os.ReadFile("/usr/share/pixmaps/subsurface-to-ssi-qr.png"); err == nil && len(pixmap) > 0 {
-		data = pixmap
-	}
-
-	if len(data) == 0 {
+	pixmap, _ := os.ReadFile("/usr/share/pixmaps/subsurface-to-ssi-qr.png")
+	data, err := preferredIconPNG(assets.IconPNG, pixmap)
+	if err != nil {
 		return nil
 	}
-
-	if resized, resizeErr := resizeIconPNG(data, maxAppIconSize); resizeErr == nil {
-		data = resized
-	}
 	return fyne.NewStaticResource(name, data)
+}
+
+// preferredIconPNG normalizes the embedded icon and, when valid, uses the
+// system pixmap in preference to it.
+func preferredIconPNG(embedded, pixmap []byte) ([]byte, error) {
+	normalizedEmbedded, err := normalizedIconPNG(embedded)
+	if err != nil {
+		return nil, err
+	}
+	if normalizedPixmap, err := normalizedIconPNG(pixmap); err == nil {
+		return normalizedPixmap, nil
+	}
+	return normalizedEmbedded, nil
+}
+
+// normalizedIconPNG validates a PNG image and caps its largest dimension.
+func normalizedIconPNG(data []byte) ([]byte, error) {
+	return resizeIconPNG(data, maxAppIconSize)
 }
 
 // resizeIconPNG decodes a PNG image and, if either dimension exceeds
 // maxSize, scales it down to fit within maxSize x maxSize, returning the
 // re-encoded PNG bytes.
 func resizeIconPNG(data []byte, maxSize int) ([]byte, error) {
-	src, _, err := image.Decode(bytes.NewReader(data))
+	src, err := png.Decode(bytes.NewReader(data))
 	if err != nil {
 		return nil, err
 	}
