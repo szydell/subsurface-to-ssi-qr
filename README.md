@@ -4,6 +4,8 @@
 Standalone desktop tool that converts Subsurface dive logs (`.ssrf`) to
 SSI-compatible QR payloads and QR images.
 
+![screenshot](assets/screenshot.png)
+
 ## Status
 
 - Subsurface .ssrf parser
