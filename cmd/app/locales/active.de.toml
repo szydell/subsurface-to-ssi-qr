@@ -13,6 +13,36 @@ other = "SSRF oeffnen"
 [btn_save_png]
 other = "QR als PNG speichern"
 
+[water_body_menu_title]
+other = "Gewaesser fuer diesen Ort"
+
+[water_body_apply_all]
+other = "Auf alle gleichen Orte anwenden"
+
+[water_body_automatic]
+other = "Automatisch"
+
+[water_body_none]
+other = "Kein Feld"
+
+[water_body_ocean]
+other = "Ozean"
+
+[water_body_river]
+other = "Fluss"
+
+[water_body_quarry]
+other = "Steinbruch"
+
+[water_body_lake]
+other = "See"
+
+[water_body_indoor]
+other = "Innenbereich"
+
+[water_body_open_water]
+other = "Freigewaesser"
+
 [label_dives]
 other = "Tauchgaenge"
 
@@ -26,7 +56,7 @@ other = "SSI-Divelog QR-Code"
 other = "Sprache:"
 
 [list_header]
-other = "Nr  Datum             Zeit       Tiefe    Ort"
+other = "Nr  Datum             Zeit       Tiefe    Gewaesser  Ort"
 
 [filter_subsurface]
 other = "Subsurface-Logs"

@@ -16,7 +16,9 @@ import (
 
 	"github.com/szydell/subsurface-to-ssi-qr/internal/buildinfo"
 	"github.com/szydell/subsurface-to-ssi-qr/internal/config"
+	"github.com/szydell/subsurface-to-ssi-qr/internal/model"
 	"github.com/szydell/subsurface-to-ssi-qr/internal/qr"
+	"github.com/szydell/subsurface-to-ssi-qr/internal/subsurface"
 )
 
 // appState holds all mutable UI state and widgets for the main window, and
@@ -26,11 +28,13 @@ type appState struct {
 	win     fyne.Window
 	tr      *translator
 
-	cfg            config.MappingConfig
-	listItems      []diveListItem
-	selectedDiveID int
-	loadedFileName string
-	startDir       string
+	cfg                config.MappingConfig
+	parsedDives        []model.DiveRecord
+	waterBodyOverrides map[int]int
+	listItems          []diveListItem
+	selectedDiveID     int
+	loadedFileName     string
+	startDir           string
 
 	status       *widget.Label
 	payloadBox   *widget.Entry
@@ -75,13 +79,15 @@ func newAppState(a fyne.App, tr *translator) *appState {
 	w.Resize(fyne.NewSize(920, 680))
 
 	return &appState{
-		fyneApp:        a,
-		win:            w,
-		tr:             tr,
-		cfg:            config.DefaultMapping(),
-		listItems:      make([]diveListItem, 0),
-		selectedDiveID: -1,
-		startDir:       resolveStartDir(a.Preferences().String(prefLastDir)),
+		fyneApp:            a,
+		win:                w,
+		tr:                 tr,
+		cfg:                config.DefaultMapping(),
+		parsedDives:        make([]model.DiveRecord, 0),
+		waterBodyOverrides: make(map[int]int),
+		listItems:          make([]diveListItem, 0),
+		selectedDiveID:     -1,
+		startDir:           resolveStartDir(a.Preferences().String(prefLastDir)),
 	}
 }
 
@@ -128,30 +134,26 @@ func (s *appState) buildUI() {
 func newDiveList(s *appState) *widget.List {
 	return widget.NewList(
 		func() int { return len(s.listItems) },
-		newDiveListRowTemplate,
+		func() fyne.CanvasObject { return newDiveRow() },
 		func(id widget.ListItemID, obj fyne.CanvasObject) {
 			s.updateDiveListRow(id, obj)
 		},
 	)
 }
 
-func newDiveListRowTemplate() fyne.CanvasObject {
-	bg := canvas.NewRectangle(color.NRGBA{R: 255, G: 255, B: 255, A: 255})
-	row := widget.NewLabelWithStyle("", fyne.TextAlignLeading, fyne.TextStyle{Monospace: true})
-	row.Wrapping = fyne.TextWrapOff
-	return container.NewMax(bg, container.NewPadded(row))
-}
-
 func (s *appState) updateDiveListRow(id widget.ListItemID, obj fyne.CanvasObject) {
 	item := s.listItems[id]
-	row := obj.(*fyne.Container)
-	bg := row.Objects[0].(*canvas.Rectangle)
-	content := row.Objects[1].(*fyne.Container)
-	line := content.Objects[0].(*widget.Label)
+	row := obj.(*diveRow)
 
-	bg.FillColor = diveRowColor(id, id == s.selectedDiveID)
-	bg.Refresh()
-	line.SetText(formatDiveRow(item))
+	row.bg.FillColor = diveRowColor(id, id == s.selectedDiveID)
+	row.bg.Refresh()
+	row.line.SetText(formatDiveRow(item, s.waterBodyColumnLabel(item.WaterBodyID)))
+	row.onTap = func() {
+		s.diveList.Select(id)
+	}
+	row.onSecondaryTap = func(pos fyne.Position) {
+		s.showWaterBodyMenu(id, pos)
+	}
 }
 
 func (s *appState) onDiveSelected(id widget.ListItemID) {
@@ -189,12 +191,14 @@ func (s *appState) onOpenClicked() {
 	s.startDir = filepath.Dir(path)
 	s.fyneApp.Preferences().SetString(prefLastDir, s.startDir)
 
-	items, err := loadDivesFromFile(path, s.cfg)
+	dives, err := subsurface.ParseFile(path)
 	if err != nil {
 		s.status.SetText(s.tr.textData("status_parse_error", map[string]any{"Err": err.Error()}))
 		return
 	}
-	s.listItems = items
+	s.parsedDives = dives
+	s.waterBodyOverrides = make(map[int]int)
+	s.refreshDiveItems()
 
 	if len(s.listItems) == 0 {
 		s.loadedFileName = ""
@@ -261,6 +265,7 @@ func (s *appState) onLangSelected(choice string) {
 	s.payloadBox.SetPlaceHolder(s.tr.text("payload_placeholder"))
 	s.listHeader.SetText(s.tr.text("list_header"))
 	s.refreshStatusText()
+	s.refreshDiveItems()
 
 	// Force relayout after text length changes across locales.
 	s.openBtn.Refresh()
@@ -286,6 +291,19 @@ func (s *appState) statusLoadedText() string {
 	return s.tr.textCount("status_loaded_n_dives", len(s.listItems), map[string]any{
 		"File": s.loadedFileName,
 	})
+}
+
+// refreshDiveItems rebuilds the dive list rows and, if a dive is currently
+// selected, its payload/QR preview, from the parsed dives, mapping config
+// and any per-dive water-body overrides.
+func (s *appState) refreshDiveItems() {
+	s.listItems = mapDivesToItemsWithOverrides(s.parsedDives, s.cfg, s.waterBodyOverrides)
+	if s.diveList != nil {
+		s.diveList.Refresh()
+	}
+	if s.selectedDiveID >= 0 && s.selectedDiveID < len(s.listItems) {
+		s.onDiveSelected(s.selectedDiveID)
+	}
 }
 
 func (s *appState) buildLayout() {

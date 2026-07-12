@@ -149,6 +149,11 @@ Default on first run is `EN`.
 
 - SSI QR format is reverse-engineered from public sources.
 - `var_water_body_id` dictionary is still incomplete in public data.
+- Water-body categories can be set per dive in the GUI by right-clicking a row
+	in the dive list (optionally applying the choice to every dive sharing the
+	same site name in the current import). Choices are session-scoped, not
+	saved across imports. Unrecognized sites omit `var_water_body_id` unless
+	conservative local keyword matching finds an unambiguous category.
 - Full in-app SSI import validation requires manual testing on iOS/Android.
 - Desktop GUI uses Fyne, which links native GUI/OpenGL libraries via cgo.
 - On Linux Wayland sessions this usually works through XWayland, so X11 compatibility/devel packages can still be required for build/runtime.

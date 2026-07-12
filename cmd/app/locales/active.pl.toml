@@ -5,13 +5,43 @@ other = "Subsurface do SSI QR"
 other = "Wczytaj plik Subsurface (.xml/.ssrf)"
 
 [payload_placeholder]
-other = "Payload SSI pojawi sie tutaj"
+other = "Payload SSI pojawi się tutaj"
 
 [btn_open_ssrf]
-other = "Otworz SSRF"
+other = "Otwórz SSRF"
 
 [btn_save_png]
 other = "Zapisz QR jako PNG"
+
+[water_body_menu_title]
+other = "Zbiornik dla tego miejsca"
+
+[water_body_apply_all]
+other = "Zastosuj do wszystkich takich miejsc"
+
+[water_body_automatic]
+other = "Automatycznie"
+
+[water_body_none]
+other = "Bez pola"
+
+[water_body_ocean]
+other = "Ocean"
+
+[water_body_river]
+other = "Rzeka"
+
+[water_body_quarry]
+other = "Kamieniołom"
+
+[water_body_lake]
+other = "Jezioro"
+
+[water_body_indoor]
+other = "Wewnątrz"
+
+[water_body_open_water]
+other = "Wody otwarte"
 
 [label_dives]
 other = "Nurkowania"
@@ -23,10 +53,10 @@ other = "Payload SSI"
 other = "Kod QR SSI Divelog"
 
 [label_language]
-other = "Jezyk:"
+other = "Język:"
 
 [list_header]
-other = "Lp  Data              Czas       Głęb.    Miejsce"
+other = "Lp  Data              Czas       Głęb.    Zbiornik   Miejsce"
 
 [filter_subsurface]
 other = "Logi Subsurface"
@@ -35,28 +65,28 @@ other = "Logi Subsurface"
 other = "Obraz PNG"
 
 [status_file_select_error]
-other = "Blad wyboru pliku: {{.Err}}"
+other = "Błąd wyboru pliku: {{.Err}}"
 
 [status_parse_error]
-other = "Blad parsera: {{.Err}}"
+other = "Błąd parsera: {{.Err}}"
 
 [status_no_valid_dives]
-other = "Nie znaleziono poprawnych nurkowan w pliku"
+other = "Nie znaleziono poprawnych nurkowań w pliku"
 
 [status_loaded_n_dives]
 one = "Wczytano nurkowanie z {{.File}}"
 few = "Wczytano {{.PluralCount}} nurkowania z {{.File}}"
-many = "Wczytano {{.PluralCount}} nurkowan z {{.File}}"
-other = "Wczytano {{.PluralCount}} nurkowan z {{.File}}"
+many = "Wczytano {{.PluralCount}} nurkowań z {{.File}}"
+other = "Wczytano {{.PluralCount}} nurkowań z {{.File}}"
 
 [status_payload_first]
 other = "Najpierw wygeneruj payload"
 
 [status_png_save_error]
-other = "Nie udalo sie zapisac PNG: {{.Err}}"
+other = "Nie udało się zapisać PNG: {{.Err}}"
 
 [status_png_saved]
 other = "Zapisano QR PNG"
 
 [status_qr_gen_error]
-other = "Blad generowania QR: {{.Err}}"
+other = "Błąd generowania QR: {{.Err}}"

@@ -2,9 +2,12 @@ package main
 
 import (
 	"path/filepath"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/szydell/subsurface-to-ssi-qr/internal/config"
+	"github.com/szydell/subsurface-to-ssi-qr/internal/model"
 )
 
 func TestLoadDivesFromFile(t *testing.T) {
@@ -57,6 +60,23 @@ func TestNormalizeSite(t *testing.T) {
 	}
 }
 
+func TestMapDivesToItemsWithOverrides(t *testing.T) {
+	dives := []model.DiveRecord{{
+		StartTime:   time.Date(2026, 1, 1, 10, 30, 0, 0, time.UTC),
+		DurationMin: 33,
+		MaxDepthM:   18,
+		Site:        "Red Sea",
+	}}
+
+	items := mapDivesToItemsWithOverrides(dives, config.DefaultMapping(), map[int]int{0: -1})
+	if len(items) != 1 {
+		t.Fatalf("expected one item, got %d", len(items))
+	}
+	if strings.Contains(items[0].Payload, "var_water_body_id:") {
+		t.Fatalf("expected omitted water-body field, got: %s", items[0].Payload)
+	}
+}
+
 func TestFormatDiveRow(t *testing.T) {
 	item := diveListItem{
 		Index:        1,
@@ -66,8 +86,24 @@ func TestFormatDiveRow(t *testing.T) {
 		SiteText:     "Blue Wall",
 	}
 
-	got := formatDiveRow(item)
-	want := "1   2025-09-20 16:23  48.5 min   26.4 m   Blue Wall"
+	got := formatDiveRow(item, "Ocean")
+	want := "1   2025-09-20 16:23  48.5 min   26.4 m   Ocean      Blue Wall"
+	if got != want {
+		t.Errorf("formatDiveRow() = %q, want %q", got, want)
+	}
+}
+
+func TestFormatDiveRow_BlankWaterBodyLabel(t *testing.T) {
+	item := diveListItem{
+		Index:        2,
+		WhenText:     "2025-09-21 08:12",
+		DurationText: "39.0 min",
+		DepthText:    "18.2 m",
+		SiteText:     "Lagoon",
+	}
+
+	got := formatDiveRow(item, "")
+	want := "2   2025-09-21 08:12  39.0 min   18.2 m              Lagoon"
 	if got != want {
 		t.Errorf("formatDiveRow() = %q, want %q", got, want)
 	}

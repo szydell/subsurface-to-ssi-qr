@@ -3,6 +3,7 @@ package subsurface
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -57,5 +58,37 @@ func TestParseFile_RealDataSSRF(t *testing.T) {
 	}
 	if first.Site == "" {
 		t.Fatal("first parsed dive has empty site; expected divesiteid resolution")
+	}
+	if first.SiteGeography == "" {
+		t.Fatal("first parsed dive has empty site geography")
+	}
+}
+
+func TestParse_SiteMetadataForWaterBodyMapping(t *testing.T) {
+	input := `<divelog>
+		<divesites>
+			<site uuid="lake-1" name="Lake Alpha" description="Freshwater lake">
+				<notes>Calm shore entry</notes>
+				<geo cat="1" value="Poland"/>
+			</site>
+		</divesites>
+		<dives>
+			<dive date="2026-01-01" time="10:30" duration="30 min" maxdepth="18 m" divesiteid="lake-1" tags="training, lake">
+				<notes>Night dive</notes>
+			</dive>
+		</dives>
+	</divelog>`
+
+	dives, err := Parse(strings.NewReader(input))
+	if err != nil {
+		t.Fatalf("Parse returned error: %v", err)
+	}
+	if got, want := len(dives), 1; got != want {
+		t.Fatalf("unexpected dive count: got %d, want %d", got, want)
+	}
+
+	dive := dives[0]
+	if dive.Site != "Lake Alpha" || dive.SiteDescription != "Freshwater lake" || dive.SiteNotes != "Calm shore entry" || dive.SiteGeography != "Poland" || dive.Tags != "training, lake" || dive.Notes != "Night dive" {
+		t.Fatalf("unexpected parsed metadata: %+v", dive)
 	}
 }

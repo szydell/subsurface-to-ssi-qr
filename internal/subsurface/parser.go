@@ -30,7 +30,7 @@ func Parse(r io.Reader) ([]model.DiveRecord, error) {
 	dec := xml.NewDecoder(r)
 
 	dives := make([]model.DiveRecord, 0)
-	siteByUUID := map[string]string{}
+	siteByUUID := map[string]siteMetadata{}
 	for {
 		tok, err := dec.Token()
 		if err == io.EOF {
@@ -47,18 +47,12 @@ func Parse(r io.Reader) ([]model.DiveRecord, error) {
 
 		switch strings.ToLower(start.Name.Local) {
 		case "site":
-			uuid := ""
-			name := ""
-			for _, a := range start.Attr {
-				switch strings.ToLower(a.Name.Local) {
-				case "uuid":
-					uuid = strings.TrimSpace(a.Value)
-				case "name":
-					name = strings.TrimSpace(a.Value)
-				}
+			site, err := parseSite(dec, start)
+			if err != nil {
+				return nil, err
 			}
-			if uuid != "" && name != "" {
-				siteByUUID[uuid] = name
+			if site.UUID != "" {
+				siteByUUID[site.UUID] = site
 			}
 			continue
 		case "dive":
@@ -83,7 +77,57 @@ func Parse(r io.Reader) ([]model.DiveRecord, error) {
 	return dives, nil
 }
 
-func parseDive(dec *xml.Decoder, root xml.StartElement, siteByUUID map[string]string) (model.DiveRecord, error) {
+type siteMetadata struct {
+	UUID        string
+	Name        string
+	Description string
+	Notes       string
+	Geography   string
+}
+
+func parseSite(dec *xml.Decoder, root xml.StartElement) (siteMetadata, error) {
+	site := siteMetadata{}
+	for _, attr := range root.Attr {
+		switch strings.ToLower(attr.Name.Local) {
+		case "uuid":
+			site.UUID = strings.TrimSpace(attr.Value)
+		case "name":
+			site.Name = strings.TrimSpace(attr.Value)
+		case "description":
+			site.Description = strings.TrimSpace(attr.Value)
+		}
+	}
+
+	for {
+		tok, err := dec.Token()
+		if err != nil {
+			return site, err
+		}
+		switch element := tok.(type) {
+		case xml.StartElement:
+			switch strings.ToLower(element.Name.Local) {
+			case "geo":
+				for _, attr := range element.Attr {
+					if strings.EqualFold(attr.Name.Local, "value") {
+						site.Geography = appendText(site.Geography, attr.Value)
+					}
+				}
+			}
+		case xml.CharData:
+			value := strings.TrimSpace(string(element))
+			if value != "" {
+				// `notes` is the only free text child emitted by common SSRF exports.
+				site.Notes = appendText(site.Notes, value)
+			}
+		case xml.EndElement:
+			if strings.EqualFold(element.Name.Local, "site") {
+				return site, nil
+			}
+		}
+	}
+}
+
+func parseDive(dec *xml.Decoder, root xml.StartElement, siteByUUID map[string]siteMetadata) (model.DiveRecord, error) {
 	rec := model.DiveRecord{}
 
 	var rawDate string
@@ -108,9 +152,14 @@ func parseDive(dec *xml.Decoder, root xml.StartElement, siteByUUID map[string]st
 			rec.WaterTypeRaw = strings.TrimSpace(a.Value)
 		case "divesiteid":
 			uuid := strings.TrimSpace(a.Value)
-			if name, ok := siteByUUID[uuid]; ok {
-				rec.Site = name
+			if site, ok := siteByUUID[uuid]; ok {
+				rec.Site = site.Name
+				rec.SiteDescription = site.Description
+				rec.SiteNotes = site.Notes
+				rec.SiteGeography = site.Geography
 			}
+		case "tags":
+			rec.Tags = strings.TrimSpace(a.Value)
 		}
 	}
 
@@ -173,6 +222,8 @@ func parseDive(dec *xml.Decoder, root xml.StartElement, siteByUUID map[string]st
 			switch current {
 			case "location", "dive_site", "site", "place":
 				rec.Site = value
+			case "notes":
+				rec.Notes = appendText(rec.Notes, value)
 			case "duration", "divetime":
 				if v, ok := parseDurationMin(value); ok {
 					rec.DurationMin = v
@@ -222,6 +273,17 @@ func parseDive(dec *xml.Decoder, root xml.StartElement, siteByUUID map[string]st
 			}
 		}
 	}
+}
+
+func appendText(current, addition string) string {
+	addition = strings.TrimSpace(addition)
+	if addition == "" {
+		return current
+	}
+	if strings.TrimSpace(current) == "" {
+		return addition
+	}
+	return current + " " + addition
 }
 
 func parseWhen(v string) (time.Time, bool) {

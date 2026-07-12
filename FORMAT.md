@@ -61,8 +61,21 @@
 - 14: River
 - 15: Quarry
 - 16: Lake
-- 17: Indoor
+- 17: Indoor — confirmed: observed in a real SSI-app-generated QR payload for
+  a dive at an indoor facility ("Centrum Indoor")
 - 54: OpenWater
+
+The application resolves this field from Subsurface metadata in the following
+order: a per-dive choice set via the GUI's dive list (right-click a row to
+pick a category, optionally applied to every dive sharing the same site
+name for the current import), an unambiguous local text match in the
+site/dive metadata, then the configured fallback (CLI/library only). When
+none applies, the field is omitted. It is not inferred from GPS or any
+online lookup.
+
+The local text match recognizes a few unique dedicated dive-pool brand names
+as Indoor even without a generic keyword like "indoor" or "pool", e.g.
+"Deepspot" (Poland).
 
 ### var_watertype_id
 
@@ -100,6 +113,27 @@
 ```text
 dive;noid;dive_type:0;divetime:48.5;datetime:202509201623;depth_m:26.4;var_weather_id:2;var_entry_id:21;var_water_body_id:15;var_watertype_id:5;var_current_id:6;var_surface_id:10;var_divetype_id:24
 ```
+
+## Real-World Confirmed Example (Indoor Dive)
+
+The following is a genuine SSI-app-generated QR payload for a dive at an
+indoor facility, with personal fields (`site`, `user_master_id`,
+`user_firstname`, `user_lastname`) redacted/replaced since they identify a
+real person and a real SSI-internal site ID:
+
+```text
+dive;noid;dive_type:0;divetime:53.0;datetime:202412091800;depth_m:12.3;site:REDACTED;var_water_body_id:17;var_watertype_id:4;var_divetype_id:24;var_divetype_id:24;user_master_id:REDACTED;user_firstname:REDACTED;user_lastname:REDACTED;user_leader_id:
+```
+
+Notes from this real example (informational; not replicated by this
+application's own serializer, since they look like quirks of the official
+app's generator rather than required compatibility behavior):
+
+- `var_divetype_id:24` appears twice.
+- `user_leader_id:` is emitted with an empty value (trailing key with no
+  value) rather than being omitted.
+- `site` is a plain integer referencing SSI's own internal dive-site
+  database, unrelated to any Subsurface identifier.
 
 ## Important
 

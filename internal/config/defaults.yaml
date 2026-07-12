@@ -1,7 +1,8 @@
 site_id: 0
 var_weather_id: 2
 var_entry_id: 21
-var_water_body_id: 15
+var_water_body_id: 0
+water_body_rules: {}
 var_watertype_id: 5
 var_current_id: 6
 var_surface_id: 10

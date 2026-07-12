@@ -5,6 +5,9 @@ import (
 	"image/color"
 	"strings"
 
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 
 	"github.com/szydell/subsurface-to-ssi-qr/internal/config"
@@ -20,6 +23,7 @@ type diveListItem struct {
 	DurationText string
 	DepthText    string
 	SiteText     string
+	WaterBodyID  int
 	Payload      string
 }
 
@@ -37,8 +41,17 @@ func loadDivesFromFile(path string, cfg config.MappingConfig) ([]diveListItem, e
 // the SSI QR payload for each dive. Dives whose payload fails to build are
 // skipped.
 func mapDivesToItems(parsed []model.DiveRecord, cfg config.MappingConfig) []diveListItem {
+	return mapDivesToItemsWithOverrides(parsed, cfg, nil)
+}
+
+// mapDivesToItemsWithOverrides applies temporary per-import water-body choices.
+// A negative override explicitly omits the SSI field; zero uses automatic mapping.
+func mapDivesToItemsWithOverrides(parsed []model.DiveRecord, cfg config.MappingConfig, overrides map[int]int) []diveListItem {
 	items := make([]diveListItem, 0, len(parsed))
 	for i, d := range parsed {
+		if override, ok := overrides[i]; ok {
+			d.WaterBodyOverride = override
+		}
 		mapped := ssi.MapDive(d, cfg)
 		payload, err := ssi.BuildPayload(mapped, cfg.IncludeUserIDs, ssi.ValidationLenient)
 		if err != nil {
@@ -50,6 +63,7 @@ func mapDivesToItems(parsed []model.DiveRecord, cfg config.MappingConfig) []dive
 			DurationText: fmt.Sprintf("%.1f min", d.DurationMin),
 			DepthText:    fmt.Sprintf("%.1f m", d.MaxDepthM),
 			SiteText:     normalizeSite(d.Site),
+			WaterBodyID:  mapped.VarWaterBody,
 			Payload:      payload,
 		})
 	}
@@ -64,15 +78,61 @@ func normalizeSite(site string) string {
 	return site
 }
 
-func formatDiveRow(item diveListItem) string {
+// formatDiveRow renders a dive's fixed-width columns: index, date, duration,
+// depth, water body, then site. waterBodyLabel is passed in separately
+// since it is localized and diveListItem only stores the numeric ID.
+func formatDiveRow(item diveListItem, waterBodyLabel string) string {
 	return fmt.Sprintf(
-		"%-3d %-17s %-10s %-8s %s",
+		"%-3d %-17s %-10s %-8s %-10s %s",
 		item.Index,
 		item.WhenText,
 		item.DurationText,
 		item.DepthText,
+		waterBodyLabel,
 		item.SiteText,
 	)
+}
+
+// diveRow is a dive list row widget. Fyne's hit-testing stops at the
+// deepest object implementing any of Tappable/SecondaryTappable/etc., so
+// once this widget catches right-clicks (TappedSecondary) it must also
+// handle left-clicks (Tapped) itself; otherwise the List's own row selection
+// would never receive them. Tapped forwards to the List's own selection.
+type diveRow struct {
+	widget.BaseWidget
+	bg             *canvas.Rectangle
+	line           *widget.Label
+	onTap          func()
+	onSecondaryTap func(pos fyne.Position)
+}
+
+func newDiveRow() *diveRow {
+	row := &diveRow{
+		bg:   canvas.NewRectangle(color.NRGBA{R: 255, G: 255, B: 255, A: 255}),
+		line: widget.NewLabelWithStyle("", fyne.TextAlignLeading, fyne.TextStyle{Monospace: true}),
+	}
+	row.line.Wrapping = fyne.TextWrapOff
+	row.ExtendBaseWidget(row)
+	return row
+}
+
+func (r *diveRow) CreateRenderer() fyne.WidgetRenderer {
+	return widget.NewSimpleRenderer(container.NewMax(r.bg, container.NewPadded(r.line)))
+}
+
+// Tapped selects the row, taking over the List's own left-click handling
+// (see the type doc comment for why this is necessary).
+func (r *diveRow) Tapped(*fyne.PointEvent) {
+	if r.onTap != nil {
+		r.onTap()
+	}
+}
+
+// TappedSecondary opens the water-body picker at the right-click position.
+func (r *diveRow) TappedSecondary(ev *fyne.PointEvent) {
+	if r.onSecondaryTap != nil {
+		r.onSecondaryTap(ev.AbsolutePosition)
+	}
 }
 
 // diveRowColor returns the background color for a dive list row, based on

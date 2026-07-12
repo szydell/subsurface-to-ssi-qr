@@ -31,6 +31,94 @@ func TestMapDiveAndBuildPayload(t *testing.T) {
 	}
 }
 
+func TestResolveWaterBodyID(t *testing.T) {
+	tests := []struct {
+		name string
+		in   DiveInput
+		cfg  MappingConfig
+		want int
+	}{
+		{
+			name: "per-dive override has precedence",
+			in:   DiveInput{Site: "Red Sea", WaterBodyOverride: WaterBodyLake},
+			cfg:  MappingConfig{WaterBodyRules: map[string]int{"red sea": WaterBodyQuarry}, WaterBodyID: WaterBodyRiver},
+			want: WaterBodyLake,
+		},
+		{
+			name: "site rule has precedence over inference",
+			in:   DiveInput{Site: "Red Sea"},
+			cfg:  MappingConfig{WaterBodyRules: map[string]int{"  RED sea  ": WaterBodyQuarry}},
+			want: WaterBodyQuarry,
+		},
+		{
+			name: "recognizes Polish keyword",
+			in:   DiveInput{SiteDescription: "Jezioro Nieslysz"},
+			cfg:  MappingConfig{},
+			want: WaterBodyLake,
+		},
+		{
+			name: "recognizes German keyword",
+			in:   DiveInput{Tags: "Steinbruch"},
+			cfg:  MappingConfig{},
+			want: WaterBodyQuarry,
+		},
+		{
+			// Real-world confirmed example: an SSI-generated QR payload for
+			// a dive at an indoor facility named "Centrum Indoor" included
+			// var_water_body_id:17, matching WaterBodyIndoor.
+			name: "recognizes indoor facility name",
+			in:   DiveInput{Site: "Centrum Indoor"},
+			cfg:  MappingConfig{},
+			want: WaterBodyIndoor,
+		},
+		{
+			// "Deepspot" is a unique brand name for a dedicated dive pool
+			// in Poland, so it unambiguously identifies an indoor facility.
+			name: "recognizes Deepspot dive pool",
+			in:   DiveInput{Site: "Deepspot"},
+			cfg:  MappingConfig{},
+			want: WaterBodyIndoor,
+		},
+		{
+			name: "uses unambiguous inference",
+			in:   DiveInput{SiteGeography: "Red Sea Egypt"},
+			cfg:  MappingConfig{},
+			want: WaterBodyOcean,
+		},
+		{
+			name: "unknown place omits field by default",
+			in:   DiveInput{Site: "Blue Wall"},
+			cfg:  MappingConfig{},
+			want: 0,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := ResolveWaterBodyID(test.in, test.cfg); got != test.want {
+				t.Errorf("ResolveWaterBodyID() = %d, want %d", got, test.want)
+			}
+		})
+	}
+}
+
+func TestBuildPayloadFromDive_OmitsUnknownWaterBody(t *testing.T) {
+	in := DiveInput{
+		StartTime:   time.Date(2026, 1, 1, 10, 30, 0, 0, time.UTC),
+		DurationMin: 33,
+		MaxDepthM:   18,
+		Site:        "Blue Wall",
+	}
+
+	payload, err := BuildPayloadFromDive(in, DefaultMappingConfig(), ValidationStrict)
+	if err != nil {
+		t.Fatalf("BuildPayloadFromDive error: %v", err)
+	}
+	if strings.Contains(payload, "var_water_body_id:") {
+		t.Fatalf("unexpected water-body field in payload: %s", payload)
+	}
+}
+
 func TestBuildPayload_StrictValidation(t *testing.T) {
 	_, err := BuildPayload(Payload{}, false, ValidationStrict)
 	if err == nil {
