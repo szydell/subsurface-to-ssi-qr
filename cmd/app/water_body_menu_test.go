@@ -78,6 +78,7 @@ func TestApplyWaterBodyChoice_SingleDiveOnly(t *testing.T) {
 		},
 		waterBodyOverrides: make(map[int]int),
 		selectedDiveID:     -1,
+		selectedDiveIndex:  -1,
 	}
 
 	s.applyWaterBodyChoice(0, ssi.WaterBodyOcean, false)
@@ -105,6 +106,7 @@ func TestApplyWaterBodyChoice_AppliesToMatchingSites(t *testing.T) {
 		},
 		waterBodyOverrides: make(map[int]int),
 		selectedDiveID:     -1,
+		selectedDiveIndex:  -1,
 	}
 
 	s.applyWaterBodyChoice(0, ssi.WaterBodyOcean, true)
@@ -133,6 +135,7 @@ func TestApplyWaterBodyChoice_AutomaticClearsOverride(t *testing.T) {
 		},
 		waterBodyOverrides: map[int]int{0: ssi.WaterBodyQuarry},
 		selectedDiveID:     -1,
+		selectedDiveIndex:  -1,
 	}
 
 	s.applyWaterBodyChoice(0, 0, false)

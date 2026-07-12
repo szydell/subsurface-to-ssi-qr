@@ -77,35 +77,51 @@ func TestMapDivesToItemsWithOverrides(t *testing.T) {
 	}
 }
 
-func TestFormatDiveRow(t *testing.T) {
+func TestDiveCellText(t *testing.T) {
 	item := diveListItem{
 		Index:        1,
 		WhenText:     "2025-09-20 16:23",
 		DurationText: "48.5 min",
 		DepthText:    "26.4 m",
 		SiteText:     "Blue Wall",
+		WaterBodyID:  0,
 	}
 
-	got := formatDiveRow(item, "Ocean")
-	want := "1   2025-09-20 16:23  48.5 min   26.4 m   Ocean      Blue Wall"
-	if got != want {
-		t.Errorf("formatDiveRow() = %q, want %q", got, want)
+	tests := []struct {
+		col  int
+		want string
+	}{
+		{col: 0, want: "1"},
+		{col: 1, want: "2025-09-20 16:23"},
+		{col: 2, want: "48.5 min"},
+		{col: 3, want: "26.4 m"},
+		{col: 4, want: "Ocean"},
+		{col: 5, want: "Blue Wall"},
+	}
+
+	for _, tc := range tests {
+		if got := diveCellText(item, tc.col, "Ocean"); got != tc.want {
+			t.Errorf("diveCellText(col=%d) = %q, want %q", tc.col, got, tc.want)
+		}
 	}
 }
 
-func TestFormatDiveRow_BlankWaterBodyLabel(t *testing.T) {
-	item := diveListItem{
-		Index:        2,
-		WhenText:     "2025-09-21 08:12",
-		DurationText: "39.0 min",
-		DepthText:    "18.2 m",
-		SiteText:     "Lagoon",
+func TestDiveCellText_UnknownColumn(t *testing.T) {
+	item := diveListItem{Index: 1}
+	if got := diveCellText(item, 99, "Ocean"); got != "" {
+		t.Errorf("diveCellText(unknown col) = %q, want empty", got)
 	}
+}
 
-	got := formatDiveRow(item, "")
-	want := "2   2025-09-21 08:12  39.0 min   18.2 m              Lagoon"
-	if got != want {
-		t.Errorf("formatDiveRow() = %q, want %q", got, want)
+func TestSortIndicator(t *testing.T) {
+	if got := sortIndicator(1, 1, true); got == "" {
+		t.Error("expected an ascending indicator for the active sort column")
+	}
+	if got := sortIndicator(1, 1, false); got == "" {
+		t.Error("expected a descending indicator for the active sort column")
+	}
+	if got := sortIndicator(1, 2, true); got != "" {
+		t.Errorf("sortIndicator for inactive column = %q, want empty", got)
 	}
 }
 

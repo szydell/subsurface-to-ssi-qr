@@ -55,8 +55,23 @@ other = "SSI-Divelog QR-Code"
 [label_language]
 other = "Sprache:"
 
-[list_header]
-other = "Nr  Datum             Zeit       Tiefe    Gewaesser  Ort"
+[col_index]
+other = "Nr"
+
+[col_date]
+other = "Datum"
+
+[col_duration]
+other = "Zeit"
+
+[col_depth]
+other = "Tiefe"
+
+[col_water_body]
+other = "Gewaesser"
+
+[col_site]
+other = "Ort"
 
 [filter_subsurface]
 other = "Subsurface-Logs"

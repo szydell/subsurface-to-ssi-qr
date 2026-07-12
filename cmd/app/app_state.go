@@ -5,6 +5,7 @@ import (
 	"image/color"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"fyne.io/fyne/v2"
@@ -33,16 +34,18 @@ type appState struct {
 	waterBodyOverrides map[int]int
 	listItems          []diveListItem
 	selectedDiveID     int
+	selectedDiveIndex  int
 	loadedFileName     string
 	startDir           string
+	sortColumn         int
+	sortAscending      bool
 
 	status       *widget.Label
 	payloadBox   *widget.Entry
 	img          *canvas.Image
-	diveList     *widget.List
+	diveTable    *widget.Table
 	openBtn      *widget.Button
 	saveBtn      *widget.Button
-	listHeader   *widget.Label
 	divesLabel   *widget.Label
 	payloadLabel *widget.Label
 	qrLabel      *widget.Label
@@ -87,6 +90,8 @@ func newAppState(a fyne.App, tr *translator) *appState {
 		waterBodyOverrides: make(map[int]int),
 		listItems:          make([]diveListItem, 0),
 		selectedDiveID:     -1,
+		selectedDiveIndex:  -1,
+		sortColumn:         -1,
 		startDir:           resolveStartDir(a.Preferences().String(prefLastDir)),
 	}
 }
@@ -106,18 +111,12 @@ func (s *appState) buildUI() {
 	s.img.FillMode = canvas.ImageFillContain
 	s.img.SetMinSize(fyne.NewSize(360, 360))
 
-	s.diveList = newDiveList(s)
-	s.diveList.OnSelected = s.onDiveSelected
+	s.diveTable = newDiveTable(s)
+	s.diveTable.OnSelected = s.onCellSelected
 
 	s.openBtn = widget.NewButton(s.tr.text("btn_open_ssrf"), s.onOpenClicked)
 	s.saveBtn = widget.NewButton(s.tr.text("btn_save_png"), s.onSaveClicked)
 
-	s.listHeader = widget.NewLabelWithStyle(
-		s.tr.text("list_header"),
-		fyne.TextAlignLeading,
-		fyne.TextStyle{Bold: true, Monospace: true},
-	)
-	s.listHeader.Wrapping = fyne.TextWrapOff
 	s.divesLabel = widget.NewLabel(s.tr.text("label_dives"))
 	s.payloadLabel = widget.NewLabel(s.tr.text("label_payload"))
 	s.qrLabel = widget.NewLabel(s.tr.text("label_ssi_qr"))
@@ -130,40 +129,154 @@ func (s *appState) buildUI() {
 	s.win.SetContent(s.content)
 }
 
-// newDiveList builds the dive list widget backed by s.listItems.
-func newDiveList(s *appState) *widget.List {
-	return widget.NewList(
-		func() int { return len(s.listItems) },
-		func() fyne.CanvasObject { return newDiveRow() },
-		func(id widget.ListItemID, obj fyne.CanvasObject) {
-			s.updateDiveListRow(id, obj)
+// newDiveTable builds the dive table widget backed by s.listItems, with a
+// clickable header row that drives column sorting.
+func newDiveTable(s *appState) *widget.Table {
+	t := widget.NewTable(
+		func() (int, int) { return len(s.listItems), diveTableColumnCount },
+		func() fyne.CanvasObject { return newDiveCell() },
+		func(id widget.TableCellID, obj fyne.CanvasObject) {
+			s.updateDiveCell(id, obj)
 		},
 	)
+	t.ShowHeaderRow = true
+	t.CreateHeader = func() fyne.CanvasObject { return newDiveHeaderCell() }
+	t.UpdateHeader = func(id widget.TableCellID, obj fyne.CanvasObject) {
+		s.updateDiveHeaderCell(id, obj)
+	}
+	for col, width := range diveTableColumnWidths {
+		t.SetColumnWidth(col, width)
+	}
+	return t
 }
 
-func (s *appState) updateDiveListRow(id widget.ListItemID, obj fyne.CanvasObject) {
-	item := s.listItems[id]
-	row := obj.(*diveRow)
+// diveTableColumnWidths are the pixel widths applied to each dive table
+// column; tuned by eye to fit the widest expected content per column.
+var diveTableColumnWidths = [diveTableColumnCount]float32{40, 150, 90, 70, 110, 220}
 
-	row.bg.FillColor = diveRowColor(id, id == s.selectedDiveID)
-	row.bg.Refresh()
-	row.line.SetText(formatDiveRow(item, s.waterBodyColumnLabel(item.WaterBodyID)))
-	row.onTap = func() {
-		s.diveList.Select(id)
+// diveTableColumnKeys maps each column index to its locale key for the
+// header title.
+var diveTableColumnKeys = [diveTableColumnCount]string{
+	"col_index", "col_date", "col_duration", "col_depth", "col_water_body", "col_site",
+}
+
+func (s *appState) updateDiveCell(id widget.TableCellID, obj fyne.CanvasObject) {
+	item := s.listItems[id.Row]
+	cell := obj.(*diveCell)
+
+	cell.bg.FillColor = diveRowColor(id.Row, id.Row == s.selectedDiveID)
+	cell.bg.Refresh()
+	cell.line.SetText(diveCellText(item, id.Col, s.waterBodyColumnLabel(item.WaterBodyID)))
+	cell.onTap = func() {
+		s.diveTable.Select(id)
 	}
-	row.onSecondaryTap = func(pos fyne.Position) {
-		s.showWaterBodyMenu(id, pos)
+	cell.onSecondaryTap = func(pos fyne.Position) {
+		s.showWaterBodyMenu(id.Row, pos)
 	}
 }
 
-func (s *appState) onDiveSelected(id widget.ListItemID) {
+func (s *appState) updateDiveHeaderCell(id widget.TableCellID, obj fyne.CanvasObject) {
+	header := obj.(*diveHeaderCell)
+	if id.Col < 0 || id.Col >= diveTableColumnCount {
+		return
+	}
+	title := s.tr.text(diveTableColumnKeys[id.Col]) + sortIndicator(id.Col, s.sortColumn, s.sortAscending)
+	header.line.SetText(title)
+	col := id.Col
+	header.onTap = func() {
+		s.onHeaderTapped(col)
+	}
+}
+
+// onCellSelected handles a Table cell tap: it immediately unselects the cell
+// (the custom background rectangle already conveys selection, so the
+// Table's own highlight would just look like a visual glitch) and forwards
+// to the row-level selection handler.
+func (s *appState) onCellSelected(id widget.TableCellID) {
+	s.diveTable.Unselect(id)
+	s.onDiveSelected(id.Row)
+}
+
+// onHeaderTapped toggles the sort applied to the dive table when the given
+// column's header is clicked: ascending on first click, descending on a
+// repeat click of the same column, and ascending again when switching to a
+// different column. Any currently selected dive stays selected (its row
+// position is recomputed via syncSelectedRow), it just moves to its new
+// sorted position.
+func (s *appState) onHeaderTapped(col int) {
+	if s.sortColumn == col {
+		s.sortAscending = !s.sortAscending
+	} else {
+		s.sortColumn = col
+		s.sortAscending = true
+	}
+
+	s.sortListItems()
+	s.syncSelectedRow()
+	s.diveTable.Refresh()
+}
+
+// syncSelectedRow recomputes s.selectedDiveID (a row position) from
+// s.selectedDiveIndex (the stable original dive index), since sorting or
+// rebuilding s.listItems can change which row displays a given dive.
+func (s *appState) syncSelectedRow() {
+	if s.selectedDiveIndex < 0 {
+		s.selectedDiveID = -1
+		return
+	}
+	for row, item := range s.listItems {
+		if item.Index-1 == s.selectedDiveIndex {
+			s.selectedDiveID = row
+			return
+		}
+	}
+	s.selectedDiveID = -1
+	s.selectedDiveIndex = -1
+}
+
+// sortListItems sorts s.listItems in place according to s.sortColumn and
+// s.sortAscending. It is a no-op when no column has been chosen for
+// sorting.
+func (s *appState) sortListItems() {
+	if s.sortColumn < 0 {
+		return
+	}
+
+	less := func(i, j int) bool {
+		a, b := s.listItems[i], s.listItems[j]
+		switch s.sortColumn {
+		case 0:
+			return a.Index < b.Index
+		case 1:
+			return a.WhenTime.Before(b.WhenTime)
+		case 2:
+			return a.DurationMin < b.DurationMin
+		case 3:
+			return a.DepthM < b.DepthM
+		case 4:
+			return strings.ToLower(s.waterBodyColumnLabel(a.WaterBodyID)) < strings.ToLower(s.waterBodyColumnLabel(b.WaterBodyID))
+		case 5:
+			return strings.ToLower(a.SiteText) < strings.ToLower(b.SiteText)
+		default:
+			return false
+		}
+	}
+	if s.sortAscending {
+		sort.SliceStable(s.listItems, func(i, j int) bool { return less(i, j) })
+	} else {
+		sort.SliceStable(s.listItems, func(i, j int) bool { return less(j, i) })
+	}
+}
+
+func (s *appState) onDiveSelected(id int) {
 	if id < 0 || id >= len(s.listItems) {
 		return
 	}
 	s.selectedDiveID = id
-	s.diveList.Refresh()
-
 	item := s.listItems[id]
+	s.selectedDiveIndex = item.Index - 1
+	s.diveTable.Refresh()
+
 	s.payloadBox.SetText(item.Payload)
 
 	png, err := qr.PNG(item.Payload, 420)
@@ -198,6 +311,9 @@ func (s *appState) onOpenClicked() {
 	}
 	s.parsedDives = dives
 	s.waterBodyOverrides = make(map[int]int)
+	s.sortColumn = -1
+	s.sortAscending = false
+	s.selectedDiveIndex = -1
 	s.refreshDiveItems()
 
 	if len(s.listItems) == 0 {
@@ -206,8 +322,8 @@ func (s *appState) onOpenClicked() {
 		return
 	}
 
-	s.diveList.Refresh()
-	s.diveList.Select(0)
+	s.diveTable.Refresh()
+	s.diveTable.Select(widget.TableCellID{Row: 0, Col: 0})
 	s.loadedFileName = filepath.Base(path)
 	s.status.SetText(s.statusLoadedText())
 }
@@ -215,11 +331,12 @@ func (s *appState) onOpenClicked() {
 func (s *appState) showNoValidDives() {
 	s.status.SetText(s.tr.text("status_no_valid_dives"))
 	s.selectedDiveID = -1
+	s.selectedDiveIndex = -1
 	s.payloadBox.SetText("")
 	s.img.Resource = nil
 	s.img.Refresh()
-	s.diveList.UnselectAll()
-	s.diveList.Refresh()
+	s.diveTable.UnselectAll()
+	s.diveTable.Refresh()
 }
 
 func (s *appState) onSaveClicked() {
@@ -263,7 +380,6 @@ func (s *appState) onLangSelected(choice string) {
 	s.qrLabel.SetText(s.tr.text("label_ssi_qr"))
 	s.langLabel.SetText(s.tr.text("label_language"))
 	s.payloadBox.SetPlaceHolder(s.tr.text("payload_placeholder"))
-	s.listHeader.SetText(s.tr.text("list_header"))
 	s.refreshStatusText()
 	s.refreshDiveItems()
 
@@ -295,11 +411,14 @@ func (s *appState) statusLoadedText() string {
 
 // refreshDiveItems rebuilds the dive list rows and, if a dive is currently
 // selected, its payload/QR preview, from the parsed dives, mapping config
-// and any per-dive water-body overrides.
+// and any per-dive water-body overrides. The currently active sort (if any)
+// is re-applied and the current selection re-anchored to the same dive.
 func (s *appState) refreshDiveItems() {
 	s.listItems = mapDivesToItemsWithOverrides(s.parsedDives, s.cfg, s.waterBodyOverrides)
-	if s.diveList != nil {
-		s.diveList.Refresh()
+	s.sortListItems()
+	s.syncSelectedRow()
+	if s.diveTable != nil {
+		s.diveTable.Refresh()
 	}
 	if s.selectedDiveID >= 0 && s.selectedDiveID < len(s.listItems) {
 		s.onDiveSelected(s.selectedDiveID)
@@ -309,11 +428,11 @@ func (s *appState) refreshDiveItems() {
 func (s *appState) buildLayout() {
 	s.toolbar = container.NewHBox(s.openBtn, s.saveBtn, layout.NewSpacer(), s.langLabel, s.langSelect)
 	left := container.NewBorder(
-		container.NewVBox(s.divesLabel, s.listHeader),
+		s.divesLabel,
 		container.NewVBox(s.payloadLabel, s.payloadBox),
 		nil,
 		nil,
-		s.diveList,
+		s.diveTable,
 	)
 	right := container.NewVBox(s.qrLabel, s.img)
 

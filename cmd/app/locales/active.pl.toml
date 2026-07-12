@@ -55,8 +55,23 @@ other = "Kod QR SSI Divelog"
 [label_language]
 other = "Język:"
 
-[list_header]
-other = "Lp  Data              Czas       Głęb.    Zbiornik   Miejsce"
+[col_index]
+other = "Lp"
+
+[col_date]
+other = "Data"
+
+[col_duration]
+other = "Czas"
+
+[col_depth]
+other = "Głęb."
+
+[col_water_body]
+other = "Zbiornik"
+
+[col_site]
+other = "Miejsce"
 
 [filter_subsurface]
 other = "Logi Subsurface"
